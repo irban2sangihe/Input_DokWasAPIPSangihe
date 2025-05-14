@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Dokumen</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: auto;
+      padding: 20px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      margin-top: 30px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    label {
+      font-weight: 500;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #2d89ef;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #1b61c3;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 16px;
+      }
+
+      input, select, button {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Upload Dokumen Pengawasan</h2>
+    <form id="uploadForm">
+      <label for="file">Pilih File PDF:</label>
+      <input type="file" id="file" accept="application/pdf" required />
+
+      <label for="kategori">Kategori:</label>
+      <select id="kategori" required>
+        <option value="Audit">Audit</option>
+        <option value="Reviu">Reviu</option>
+        <option value="Evaluasi">Evaluasi</option>
+        <option value="Lainnya">Lainnya</option>
+      </select>
+
+      <label for="tahun">Tahun:</label>
+      <input type="text" id="tahun" placeholder="Contoh: 2024" required />
+
+      <button type="submit">Upload Dokumen</button>
+    </form>
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fileInput = document.getElementById("file");
+      const kategori = document.getElementById("kategori").value;
+      const tahun = document.getElementById("tahun").value;
+
+      const file = fileInput.files[0];
+      if (!file) {
+        message.textContent = "Harap pilih file.";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const fileBytes = reader.result.split(",")[1];
+
+        const formData = {
+          file: {
+            name: file.name,
+            mimeType: file.type,
+            bytes: fileBytes
+          },
+          kategori: kategori,
+          tahun: tahun
+        };
+
+        try {
+          const res = await fetch("https://script.google.com/macros/s/AKfycbyesGAqHKCcrA6fNp8LdWxu1g94PqfYVFawim_K0f9NPK3dxYSga63EzOxnBdFrlDyF/exec", {
+            method: "POST",
+            body: JSON.stringify(formData),
+            headers: {
+              "Content-Type": "application/json"
+            }
+          });
+
+          const result = await res.text();
+          message.textContent = result.includes("Berhasil") ? "✅ " + result : "❌ " + result;
+          message.style.color = result.includes("Berhasil") ? "green" : "red";
+        } catch (err) {
+          message.textContent = "❌ Gagal menghubungi server.";
+          message.style.color = "red";
+        }
+      };
+
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
